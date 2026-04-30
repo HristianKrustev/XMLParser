@@ -44,7 +44,6 @@ std::string Element::getId() const
 
 void Element::setId(const std::string& id)
 {
-	// TODO:: UNIQUEALIZE
 	this->id = id;
 }
 
