@@ -14,16 +14,13 @@ private:
 	std::string text;
 
 	int levelInHierarchy;
-	Element* parentElement;
+	const Element* parentElement;
 
 	std::map<std::string, std::string> attributes;
 	std::vector<Element*> children;
 
-	void makeUniqueId(const std::string&);
-
 public:
 
-	Element();
 	Element(const std::string&);
 	Element(const std::string&, const std::string&, const std::string&);
 	Element(const std::string&, const std::string&, const std::string&, const Element&);
@@ -38,11 +35,11 @@ public:
 	void setText(const std::string&);
 
 	int getLevelInHierarchy() const;
-	Element& getParentElement() const;
-	void setParentElement();
+	const Element& getParentElement() const;
+	void setParentElement(const Element&);
 
 	void addAttribute(const std::string&, const std::string&);
-	void addChild(const Element&);
+	void addChild(Element&);
 	void removeAttribute(const std::string&);
 	void removeChild(int);
 };
