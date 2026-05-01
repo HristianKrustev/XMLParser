@@ -2,6 +2,32 @@
 #include <fstream>
 #include <iostream>
 
+void Document::saveAt(const std::string& path)
+{
+	std::ofstream ofile(path, std::ios::out);
+
+	for (int i = 0; i < rawData.size(); i++)
+	{
+		ofile << rawData[i] << std::endl;
+	}
+
+	ofile.close();
+}
+
+void Document::setFileName(const std::string& path)
+{
+	for (int i = 0; i < path.size(); i++)
+	{
+		if (path[i] == '\\')
+		{
+			fileName.clear();
+			continue;
+		}
+
+		fileName += path[i];
+	}
+}
+
 void Document::open(const std::string& path)
 {
 	if (isLoaded) close();
@@ -16,8 +42,10 @@ void Document::open(const std::string& path)
 		ifile.open(path, std::ios::in);
 	}
 
-	if (!ifile) throw std::runtime_error("Cannot open file");
+	if (!ifile.is_open()) throw std::runtime_error("Cannot open file");
 
+	this->path = path;
+	setFileName(path);
 	isLoaded = true;
 
 	char line[1025];
@@ -31,34 +59,54 @@ void Document::open(const std::string& path)
 
 	ifile.close();
 
-	std::cout << "Successfully opened " << path;
+	std::cout << "Successfully opened " << fileName << std::endl;
 }
 
 void Document::close()
 {
-	// DELETE DATA HERE
+	if (!isLoaded)
+	{
+		std::cout << "Open a file first! \n";
+		return;
+	}
 
+	path.clear();
+	rawData.clear();
+	allElements.clear();
+	idIndex.clear();
 	isLoaded = false;
 
-	std::cout << "Successfully closed " << path;
+	std::cout << "Successfully closed " << fileName << std::endl;
+
+	fileName.clear();
 }
 
 void Document::save()
 {
-	std::ofstream ofile(path, std::ios::out);
+	if (!isLoaded)
+	{
+		std::cout << "Open a file first! \n";
+		return;
+	}
 
-	// SAVE LOGIC
+	saveAt(path);
 
-	ofile.close();
+	std::cout << "Successfully saved " << fileName << std::endl;
 }
 
 void Document::saveAs(const std::string& newPath)
 {
-	std::ofstream ofile(newPath, std::ios::out);
+	if (!isLoaded)
+	{
+		std::cout << "Open a file first! \n";
+		return;
+	}
 
-	// SAVE LOGIC
+	saveAt(newPath);
+	this->path = newPath;
+	setFileName(path);
 
-	ofile.close();
+	std::cout << "Successfully saved " << fileName << std::endl;
 }
 
 void Document::help()
@@ -75,11 +123,5 @@ void Document::help()
 void Document::exit()
 {
 	std::cout << "Exiting the program";
-	return;
-}
-
-int main()
-{
-	Document d;
-	d.open("sad.txt");
+	std::exit(0);
 }
