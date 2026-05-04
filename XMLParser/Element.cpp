@@ -1,30 +1,65 @@
 #include "Element.h"
 
-Element::Element(const std::string& tagName)
+void Element::copy(const Element& other)
 {
-	this->tagName = tagName;
+	tagName = other.tagName;
+	id = other.id;
+	text = other.text;
+	parentElement = other.parentElement;
+	levelInHierarchy = other.levelInHierarchy;
+	attributes = other.attributes;
+
+	for (int i = 0; i < other.children.size(); i++)
+	{
+		children.push_back(new Element(*other.children[i]));
+	}
+}
+
+void Element::free()
+{
+	tagName = "";
 	id = "";
 	text = "";
 	parentElement = nullptr;
 	levelInHierarchy = 0;
+	attributes.clear();
+	
+	for (int i = 0; i < children.size(); i++)
+	{
+		delete children[i];
+	}
 }
 
-Element::Element(const std::string& tagName, const std::string& id, const std::string& text)
+Element::Element()
 {
-	this->tagName = tagName;
-	this->id = id;
-	this->text = text;
+	tagName = tagName;
+	id = "";
+	text = "";
 	parentElement = nullptr;
 	levelInHierarchy = 0;
+	attributes.clear();
+	children.clear();
 }
 
-Element::Element(const std::string& tagName, const std::string& id, const std::string& text, const Element& parentElement)
+Element::Element(const Element& other)
 {
-	this->tagName = tagName;
-	this->id = id;
-	this->text = text;
-	this->parentElement = &parentElement;
-	levelInHierarchy = parentElement.levelInHierarchy + 1;
+	copy(other);
+}
+
+Element& Element::operator=(const Element& other)
+{
+	if (this != &other)
+	{
+		free();
+		copy(other);
+	}
+
+	return *this;
+}
+
+Element::~Element()
+{
+	free();
 }
 
 std::string Element::getTagName() const
@@ -62,12 +97,12 @@ int Element::getLevelInHierarchy() const
 	return levelInHierarchy;
 }
 
-const Element& Element::getParentElement() const
+Element& Element::getParentElement() const
 {
 	return *parentElement;
 }
 
-void Element::setParentElement(const Element& parentElement)
+void Element::setParentElement(Element& parentElement)
 {
 	this->parentElement = &parentElement;
 	levelInHierarchy = parentElement.getLevelInHierarchy() + 1;

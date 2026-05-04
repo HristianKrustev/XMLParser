@@ -14,16 +14,20 @@ private:
 	std::string text;
 
 	int levelInHierarchy;
-	const Element* parentElement;
+	Element* parentElement;
 
 	std::map<std::string, std::string> attributes;
 	std::vector<Element*> children;
 
+	void copy(const Element&);
+	void free();
+
 public:
 
-	Element(const std::string&);
-	Element(const std::string&, const std::string&, const std::string&);
-	Element(const std::string&, const std::string&, const std::string&, const Element&);
+	Element();
+	Element(const Element&);
+	Element& operator=(const Element&);
+	~Element();
 
 	std::string getTagName() const;
 	void setTagName(const std::string&);
@@ -35,8 +39,8 @@ public:
 	void setText(const std::string&);
 
 	int getLevelInHierarchy() const;
-	const Element& getParentElement() const;
-	void setParentElement(const Element&);
+	Element& getParentElement() const;
+	void setParentElement(Element&);
 
 	void addAttribute(const std::string&, const std::string&);
 	void addChild(Element&);
