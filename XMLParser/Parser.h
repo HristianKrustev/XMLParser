@@ -9,10 +9,11 @@ class Parser
 
 private:
 
-	void parseElement(std::vector<Element*>, const std::string&);
-	void parseTagName(std::string&, const std::string&);
-	void parseAttributes(std::map<std::string, std::string>&, const std::string&);
-	void parseText(std::string, const std::string&);
+	void parseTagName(Element*, const std::vector<std::string>&, int, int&);
+	void parseAttributePart(std::string&, const std::vector<std::string>&, int, int&, char);
+	void parseAttributes(Element*, const std::vector<std::string>&, int, int&);
+	void parseText(Element*, const std::vector<std::string>&, int, int&);
+	void skipWhitespaces(const std::vector<std::string>&, int, int&);
 
 public: 
 
