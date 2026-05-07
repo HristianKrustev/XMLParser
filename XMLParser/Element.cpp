@@ -97,9 +97,9 @@ int Element::getLevelInHierarchy() const
 	return levelInHierarchy;
 }
 
-Element& Element::getParentElement() const
+Element* Element::getParentElement() const
 {
-	return *parentElement;
+	return parentElement;
 }
 
 void Element::setParentElement(Element& parentElement)

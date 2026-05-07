@@ -39,7 +39,7 @@ public:
 	void setText(const std::string&);
 
 	int getLevelInHierarchy() const;
-	Element& getParentElement() const;
+	Element* getParentElement() const;
 	void setParentElement(Element&);
 
 	void addAttribute(const std::string&, const std::string&);

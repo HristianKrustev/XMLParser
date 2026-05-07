@@ -1,5 +1,7 @@
 #include "Parser.h"
 
+constexpr int INTOFFSET = 48;
+
 void Parser::parseTagName(Element* elem, const std::vector<std::string>& data, int i, int& j)
 {
 	std::string name;
@@ -11,6 +13,19 @@ void Parser::parseTagName(Element* elem, const std::vector<std::string>& data, i
 	elem->setTagName(name);
 }
 
+void Parser::generateId(Element* elem, bool& isIdGenerated, int& i, const std::map<std::string, int>& idIndex)
+{
+	if (elem->getParentElement() != nullptr)
+	{
+		if (idIndex.find(elem->getParentElement()->getId() + "_" + char(i + INTOFFSET)) != idIndex.end())
+		{
+			elem->setId(elem->getParentElement()->getId() + "_" + char(i + INTOFFSET));
+			isIdGenerated = true;
+		}
+		i++;
+	}
+}
+
 void Parser::parseAttributePart(std::string& attributePart, const std::vector<std::string>& data, int i, int& j, char c)
 {
 	while (data[i][j] != c && data[i][j] != '>')
@@ -20,12 +35,11 @@ void Parser::parseAttributePart(std::string& attributePart, const std::vector<st
 	}
 }
 
-void Parser::parseAttributes(Element* elem, const std::vector<std::string>& data, int i, int& j)
+void Parser::parseAttributes(Element* elem, const std::vector<std::string>& data, int i, int& j, const std::map<std::string, int>& idIndex)
 {
 	std::string attributeName;
 	std::string attributeValue;
-
-	// ADD UNIQUE IDs
+	bool isIdGenerated = false;
 	
 	while (data[i][j] != '>')
 	{
@@ -34,6 +48,12 @@ void Parser::parseAttributes(Element* elem, const std::vector<std::string>& data
 
 		parseAttributePart(attributeValue, data, i, j, '"');
 		j++; // "
+
+		if (attributeName == "id")
+		{
+			elem->setId(attributeValue);
+			isIdGenerated = true;
+		}
 
 		if (attributeName.size() > 0 && attributeValue.size() > 0)
 		{
@@ -46,6 +66,12 @@ void Parser::parseAttributes(Element* elem, const std::vector<std::string>& data
 			attributeValue.clear();
 			skipWhitespaces(data, i, j);
 		}
+	}
+
+	int k = 1;
+	while (!isIdGenerated)
+	{
+		generateId(elem, isIdGenerated, k, idIndex);
 	}
 }
 
@@ -65,7 +91,7 @@ void Parser::skipWhitespaces(const std::vector<std::string>& data, int i, int& j
 	while (data[i][j] == ' ') j++;
 }
 
-void Parser::parse(std::vector<Element*>& elements, const std::vector<std::string>& data)
+void Parser::parse(std::vector<Element*>& elements, const std::vector<std::string>& data, std::map<std::string, int>& idIndex)
 {
 	bool isNextElementRoot = true;
 	std::vector<Element*> newParent;
@@ -85,11 +111,12 @@ void Parser::parse(std::vector<Element*>& elements, const std::vector<std::strin
 				j++; // <
 				parseTagName(elem, data, i, j);
 				skipWhitespaces(data, i, j);
-				parseAttributes(elem, data, i, j);
+				parseAttributes(elem, data, i, j, idIndex);
 				parseText(elem, data, i, j);
 
 				elements.push_back(elem);
 				newParent.push_back(elem);
+				idIndex.emplace(elem->getId(), elements.size() - 1);
 				isNextElementRoot = false;
 
 			}
@@ -101,13 +128,14 @@ void Parser::parse(std::vector<Element*>& elements, const std::vector<std::strin
 				j++; // <
 				parseTagName(elem, data, i, j);
 				skipWhitespaces(data, i, j);
-				parseAttributes(elem, data, i, j);
+				parseAttributes(elem, data, i, j, idIndex);
 				parseText(elem, data, i, j);
 				elem->setParentElement(*newParent.back());
 				newParent.back()->addChild(*elem);
 
 				elements.push_back(elem);
 				newParent.push_back(elem);
+				idIndex.emplace(elem->getId(), elements.size() - 1);
 			}
 			else if (data[i][j] == '<' && data[i][j + 1] == '/') // closeTag
 			{

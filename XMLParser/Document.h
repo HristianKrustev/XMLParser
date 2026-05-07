@@ -17,7 +17,7 @@ private:
 	std::vector<std::string> rawData;
 	std::vector<Element*> allElements;
 	//maps an element's unique id to it's index in the vector allElements
-	std::map<std::string, Element*> idIndex;
+	std::map<std::string, int> idIndex;
 
 	void saveAt(const std::string& path);
 	void setFileName(const std::string& path);
