@@ -6,9 +6,9 @@ void Document::saveAt(const std::string& path)
 {
 	std::ofstream ofile(path, std::ios::out);
 
-	for (int i = 0; i < rawData.size(); i++)
+	for (int i = 0; i < roots.size(); i++)
 	{
-		ofile << rawData[i] << std::endl;
+		roots[i]->writeToStream(ofile);
 	}
 
 	ofile.close();
@@ -55,7 +55,8 @@ void Document::open(const std::string& path)
 		rawData.push_back(line);
 	}
 
-	// PARSE HERE
+	Parser parser;
+	parser.parse(roots, allElements, rawData, idIndex);
 
 	ifile.close();
 
@@ -72,6 +73,7 @@ void Document::close()
 
 	path.clear();
 	rawData.clear();
+	roots.clear();
 	allElements.clear();
 	idIndex.clear();
 	isLoaded = false;
@@ -124,4 +126,21 @@ void Document::exit()
 {
 	std::cout << "Exiting the program";
 	std::exit(0);
+}
+
+void Document::print()
+{
+	for (int i = 0; i < roots.size(); i++)
+	{
+		roots[i]->writeToStream(std::cout);
+	}
+}
+
+int main()
+{
+	Document doc;
+	doc.open("C:\\XMLParser\\XMLParser\\XMLParser\\test.txt");
+	doc.print();
+	doc.save();
+	doc.close();
 }

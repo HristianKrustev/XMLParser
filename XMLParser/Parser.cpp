@@ -13,13 +13,13 @@ void Parser::parseTagName(Element* elem, const std::vector<std::string>& data, i
 	elem->setTagName(name);
 }
 
-void Parser::generateId(Element* elem, bool& isIdGenerated, int& i, const std::map<std::string, int>& idIndex)
+void Parser::generateId(Element* elem, Element* parentElement, bool& isIdGenerated, int& i, const std::map<std::string, int>& idIndex)
 {
-	if (elem->getParentElement() != nullptr)
+	if (parentElement != nullptr)
 	{
-		if (idIndex.find(elem->getParentElement()->getId() + "_" + char(i + INTOFFSET)) != idIndex.end())
+		if (idIndex.find(parentElement->getId() + "_" + char(i + INTOFFSET)) == idIndex.end())
 		{
-			elem->setId(elem->getParentElement()->getId() + "_" + char(i + INTOFFSET));
+			elem->setId(parentElement->getId() + "_" + char(i + INTOFFSET));
 			isIdGenerated = true;
 		}
 		i++;
@@ -49,6 +49,7 @@ void Parser::parseAttributes(Element* elem, const std::vector<std::string>& data
 		parseAttributePart(attributeValue, data, i, j, '"');
 		j++; // "
 
+		// CHECK TO SEE IF IT EXISTS
 		if (attributeName == "id")
 		{
 			elem->setId(attributeValue);
@@ -68,15 +69,24 @@ void Parser::parseAttributes(Element* elem, const std::vector<std::string>& data
 		}
 	}
 
-	int k = 1;
-	while (!isIdGenerated)
+	if (!isIdGenerated)
 	{
-		generateId(elem, isIdGenerated, k, idIndex);
+		int k = 1;
+		Element* parentElement = elem->getParentElement();
+		std::string currentId = parentElement->getId();
+		while (!isIdGenerated)
+		{
+			generateId(elem, parentElement, isIdGenerated, k, idIndex);
+		}
 	}
 }
 
 void Parser::parseText(Element* elem, const std::vector<std::string>& data, int i, int& j)
 {
+	if (data[i][j] == '>') j++;
+
+	if (data[i][j] == '\0') return;
+
 	std::string text;
 	while (data[i][j] != '<')
 	{
@@ -91,7 +101,13 @@ void Parser::skipWhitespaces(const std::vector<std::string>& data, int i, int& j
 	while (data[i][j] == ' ') j++;
 }
 
-void Parser::parse(std::vector<Element*>& elements, const std::vector<std::string>& data, std::map<std::string, int>& idIndex)
+void Parser::skipTabs(const std::vector<std::string>& data, int i, int& j)
+{
+	while (data[i][j] == '\t') j += 4;
+}
+
+
+void Parser::parse(std::vector<Element*>& roots, std::vector<Element*>& elements, const std::vector<std::string>& data, std::map<std::string, int>& idIndex)
 {
 	bool isNextElementRoot = true;
 	std::vector<Element*> newParent;
@@ -99,48 +115,51 @@ void Parser::parse(std::vector<Element*>& elements, const std::vector<std::strin
 
 	for (int i = 0; i < data.size(); i++)
 	{
-		for (int j = 0; j < data[i].size(); j++) // parse line
+		for (int j = 1; j < data[i].size(); j++) // parse line
 		{
+			skipTabs(data, i, j);
 			skipWhitespaces(data, i, j);
 
-			if (data[i][j] == '<' && data[i][j + 1] != '/' && isNextElementRoot) // newRoot
+			if (data[i][j - 1] == '<' && data[i][j] != '/' && isNextElementRoot) // newRoot
 			{
 				levelInHierarchy = 0;
 				Element* elem = new Element();
 
-				j++; // <
+				//j++; // <
 				parseTagName(elem, data, i, j);
 				skipWhitespaces(data, i, j);
 				parseAttributes(elem, data, i, j, idIndex);
 				parseText(elem, data, i, j);
 
+				roots.push_back(elem);
 				elements.push_back(elem);
 				newParent.push_back(elem);
 				idIndex.emplace(elem->getId(), elements.size() - 1);
 				isNextElementRoot = false;
 
 			}
-			else if (data[i][j] == '<' && data[i][j + 1] != '/') // newChild
+			else if (data[i][j - 1] == '<' && data[i][j] != '/') // newChild
 			{
 				levelInHierarchy++;
 				Element* elem = new Element();
 
-				j++; // <
+				// j++; // <
+				elem->setParentElement(*newParent.back());
 				parseTagName(elem, data, i, j);
 				skipWhitespaces(data, i, j);
 				parseAttributes(elem, data, i, j, idIndex);
 				parseText(elem, data, i, j);
-				elem->setParentElement(*newParent.back());
 				newParent.back()->addChild(*elem);
 
 				elements.push_back(elem);
 				newParent.push_back(elem);
 				idIndex.emplace(elem->getId(), elements.size() - 1);
 			}
-			else if (data[i][j] == '<' && data[i][j + 1] == '/') // closeTag
+			else if (data[i][j - 1] == '<' && data[i][j] == '/') // closeTag
 			{
 				if (--levelInHierarchy < 0) isNextElementRoot = true;
 				newParent.pop_back();
+				break;
 			}
 		}
 	}

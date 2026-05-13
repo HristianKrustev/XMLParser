@@ -1,5 +1,7 @@
 #include "Element.h"
 
+constexpr int INDENTATION_SPACE = 2;
+
 void Element::copy(const Element& other)
 {
 	tagName = other.tagName;
@@ -30,9 +32,58 @@ void Element::free()
 	}
 }
 
+void Element::writeIndentationToStream(std::ostream& os) const
+{
+	for (int i = 0; i < INDENTATION_SPACE * levelInHierarchy; i++)
+	{
+		os << ' ';
+	}
+}
+
+void Element::writeOpeningTagToStream(std::ostream& os) const
+{
+	os << '<';
+	os << getTagName();
+	writeAttributesToStream(os);
+	os << '>';
+}
+
+void Element::writeAttributesToStream(std::ostream& os) const
+{
+	for (auto i = attributes.begin(); i != attributes.end(); i++)
+	{
+		os << ' ' << i->first << '=' << '"' << i->second << '"';
+	}
+}
+
+void Element::writeTextToStream(std::ostream& os) const
+{
+	os << getText();
+}
+
+void Element::writeChildrenToStream(std::ostream& os) const
+{
+	if (!children.empty())
+	{
+		os << std::endl;
+		for (int i = 0; i < children.size(); i++)
+		{
+			children[i]->writeToStream(os);
+		}
+	}
+}
+
+void Element::writeClosingTagToStream(std::ostream& os) const
+{
+	os << "</";
+	os << getTagName();
+	os << '>';
+	os << std::endl;
+}
+
 Element::Element()
 {
-	tagName = tagName;
+	tagName = "";
 	id = "";
 	text = "";
 	parentElement = nullptr;
@@ -106,6 +157,16 @@ void Element::setParentElement(Element& parentElement)
 {
 	this->parentElement = &parentElement;
 	levelInHierarchy = parentElement.getLevelInHierarchy() + 1;
+}
+
+void Element::writeToStream(std::ostream& os) const
+{
+	writeIndentationToStream(os);
+	writeOpeningTagToStream(os);
+	writeTextToStream(os);
+	writeChildrenToStream(os);
+	// ADD INDETATION TO CLOSING TAG
+	writeClosingTagToStream(os);
 }
 
 void Element::addAttribute(const std::string& name, const std::string& value)

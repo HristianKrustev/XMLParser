@@ -3,7 +3,9 @@
 #include <vector>
 #include <string>
 #include <map>
+#include <iostream>
 #include "Element.h"
+#include "Parser.h"
 
 class Document
 {
@@ -15,7 +17,8 @@ private:
 	bool isLoaded = false;
 
 	std::vector<std::string> rawData;
-	std::vector<Element*> allElements;
+	std::vector<Element*> roots; // FREE
+	std::vector<Element*> allElements; // FREE 
 	//maps an element's unique id to it's index in the vector allElements
 	std::map<std::string, int> idIndex;
 
@@ -30,5 +33,6 @@ public:
 	void saveAs(const std::string& newPath);
 	void help();
 	void exit();
+	void print();
 };
 
